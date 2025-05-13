@@ -1,0 +1,19 @@
+
+services:
+  backend1:
+    build:
+      context: ./backend1
+    ports:
+      - "5001:5001"
+
+  backend2:
+    build:
+      context: ./backend2
+    ports:
+      - "5002:5002"
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
