@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tareas, setTareas] = useState([]);
+  const [nueva, setNueva] = useState("");
+  const [contador, setContador] = useState(1);
+
+  const fetchTareas = async () => {
+    const res = await fetch("/api/tareas/");
+    const data = await res.json();
+    setTareas(data.tareas || []);
+  };
+
+  const crearTarea = async () => {
+    if (!nueva.trim()) return;
+    const res = await fetch("/api/tareas/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: contador, descripcion: nueva })
+    });
+    setContador(contador + 1);
+    setNueva("");
+    fetchTareas();
+  };
+
+  const eliminarTarea = async (id) => {
+    await fetch(`/api/tareas/${id}`, { method: "DELETE" });
+    fetchTareas();
+  };
+
+  useEffect(() => {
+    fetchTareas();
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ padding: 20 }}>
+      <h1>Gestor de Tareas</h1>
+      <input value={nueva} onChange={e => setNueva(e.target.value)} />
+      <button onClick={crearTarea}>Crear</button>
+      <ul>
+        {tareas.map(t => (
+          <li key={t.id}>
+            {t.descripcion}
+            <button onClick={() => eliminarTarea(t.id)}>Eliminar</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default App
+export default App;
