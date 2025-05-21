@@ -1,31 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from "react";
 
 function App() {
   const [tareas, setTareas] = useState([]);
-  const [nueva, setNueva] = useState("");
+  const [descripcion, setDescripcion] = useState("");
   const [contador, setContador] = useState(1);
 
   const fetchTareas = async () => {
-    const res = await fetch("/api/tareas/");
-    const data = await res.json();
-    setTareas(data.tareas || []);
+    try {
+      const res = await fetch("/api/tareas/");
+      const data = await res.json();
+      setTareas(data.tareas || []);
+    } catch (err) {
+      console.error("Error cargando tareas:", err);
+    }
   };
 
   const crearTarea = async () => {
-    if (!nueva.trim()) return;
-    const res = await fetch("/api/tareas/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: contador, descripcion: nueva })
-    });
-    setContador(contador + 1);
-    setNueva("");
-    fetchTareas();
+    if (!descripcion.trim()) return;
+
+    try {
+      const res = await fetch("/api/tareas/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: contador, descripcion }),
+      });
+
+      const responseData = await res.json();
+      console.log("RESPUESTA DE CREAR:", responseData);
+
+      setContador(contador + 1);
+      setDescripcion("");
+      await fetchTareas();
+    } catch (err) {
+      console.error("Error al crear tarea:", err);
+    }
   };
 
   const eliminarTarea = async (id) => {
-    await fetch(`/api/tareas/${id}`, { method: "DELETE" });
-    fetchTareas();
+    try {
+      const res = await fetch(`/api/tareas/${id}`, { method: "DELETE" });
+      const responseData = await res.json();
+      console.log("RESPUESTA DE ELIMINAR:", responseData);
+
+      await fetchTareas();
+    } catch (err) {
+      console.error("Error al eliminar tarea:", err);
+    }
   };
 
   useEffect(() => {
@@ -35,10 +55,15 @@ function App() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Gestor de Tareas</h1>
-      <input value={nueva} onChange={e => setNueva(e.target.value)} />
+      <input
+        value={descripcion}
+        onChange={(e) => setDescripcion(e.target.value)}
+        placeholder="Nueva tarea"
+      />
       <button onClick={crearTarea}>Crear</button>
+
       <ul>
-        {tareas.map(t => (
+        {tareas.map((t) => (
           <li key={t.id}>
             {t.descripcion}
             <button onClick={() => eliminarTarea(t.id)}>Eliminar</button>
