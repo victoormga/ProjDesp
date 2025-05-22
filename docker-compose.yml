@@ -5,6 +5,14 @@ services:
     container_name: backend1
     expose:
       - "5001"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=tareasdb
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=userpass
+    depends_on:
+    - mysql
+    restart: on-failure
 
   backend2:
     build:
@@ -12,6 +20,28 @@ services:
     container_name: backend2
     expose:
       - "5002"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=tareasdb
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=userpass
+    depends_on:
+    - mysql
+    restart: on-failure
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tareasdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpass
+    ports:
+      - "3308:3308"
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   nginx:
     build:
@@ -22,3 +52,6 @@ services:
     depends_on:
       - backend1
       - backend2
+
+volumes:
+  mysql_data:
