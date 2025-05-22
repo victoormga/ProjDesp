@@ -1,89 +1,101 @@
-import os
-import pymysql
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import pymysql
 from typing import List
 
 app = FastAPI()
 
-# Modelo de datos
-class Tarea(BaseModel):
-    id: int
-    descripcion: str
-
-# Función para obtener la conexión a MySQL
+# Configuración de la conexión a MySQL
 def get_connection():
     return pymysql.connect(
-        host=os.getenv("MYSQL_HOST", "mysql"),
-        user=os.getenv("MYSQL_USER", "user"),
-        password=os.getenv("MYSQL_PASSWORD", "userpass"),
-        database=os.getenv("MYSQL_DATABASE", "tareasdb"),
+        host="mysql",
+        user="user",
+        password="password",
+        database="tareasdb",
         cursorclass=pymysql.cursors.DictCursor
     )
 
-# Inicializa la base de datos: crea la tabla si no existe
+# Crear tabla si no existe
 def init_db():
-    connection = get_connection()
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS tareas (
-                id INT PRIMARY KEY,
-                descripcion TEXT
-            )
-        """)
-    connection.commit()
-    connection.close()
+    conn = get_connection()
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tareas (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    titulo VARCHAR(255),
+                    descripcion TEXT
+                )
+            """)
+        conn.commit()
 
-# Llamada al inicio de la aplicación
 init_db()
 
-@app.get("/api/tareas/")
-def listar_tareas():
-    connection = get_connection()
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM tareas")
-        tareas = cursor.fetchall()
-    connection.close()
-    return {"backend": "backend1", "tareas": tareas}
+# Modelo Pydantic para una tarea
+class Tarea(BaseModel):
+    titulo: str
+    descripcion: str
 
-@app.get("/api/tareas/{tarea_id}")
+class TareaConID(Tarea):
+    id: int
+
+# Obtener todas las tareas
+@app.get("/api/tareas/", response_model=List[TareaConID])
+def obtener_tareas():
+    conn = get_connection()
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM tareas")
+            tareas = cursor.fetchall()
+    return tareas
+
+# Crear nueva tarea
+@app.post("/api/tareas/", response_model=TareaConID)
+def crear_tarea(tarea: Tarea):
+    conn = get_connection()
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO tareas (titulo, descripcion) VALUES (%s, %s)",
+                (tarea.titulo, tarea.descripcion)
+            )
+            tarea_id = cursor.lastrowid
+        conn.commit()
+    return {**tarea.dict(), "id": tarea_id}
+
+# Obtener tarea por ID
+@app.get("/api/tareas/{tarea_id}", response_model=TareaConID)
 def obtener_tarea(tarea_id: int):
-    connection = get_connection()
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM tareas WHERE id = %s", (tarea_id,))
-        tarea = cursor.fetchone()
-    connection.close()
-    if tarea is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
-    return {"backend": "backend1", "tarea": tarea}
+    conn = get_connection()
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM tareas WHERE id = %s", (tarea_id,))
+            tarea = cursor.fetchone()
+            if tarea is None:
+                raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    return tarea
 
-@app.post("/api/tareas/")
-def crear_tarea(t: Tarea):
-    connection = get_connection()
-    with connection.cursor() as cursor:
-        try:
-            cursor.execute("INSERT INTO tareas (id, descripcion) VALUES (%s, %s)", (t.id, t.descripcion))
-        except pymysql.err.IntegrityError:
-            connection.close()
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ID ya existe")
-    connection.commit()
-    connection.close()
-    return {"backend": "backend1", "tarea": t}
-
+# Eliminar tarea
 @app.delete("/api/tareas/{tarea_id}")
 def eliminar_tarea(tarea_id: int):
-    connection = get_connection()
-    with connection.cursor() as cursor:
-        cursor.execute("DELETE FROM tareas WHERE id = %s", (tarea_id,))
-    connection.commit()
-    connection.close()
-    return {"backend": "backend1", "mensaje": "Tarea eliminada"}
+    conn = get_connection()
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM tareas WHERE id = %s", (tarea_id,))
+        conn.commit()
+    return {"mensaje": "Tarea eliminada"}
 
-@app.put("/api/tareas/{tarea_id}")
-def actualizar_tarea(tarea_id: int, t: Tarea):
-    connection = get_connection()
-    with connection.cursor() as cursor:
-        cursor.execute("UPDATE tareas SET descripcion = %s WHERE id = %s", (t.descripcion, tarea_id))
-    connection.commit()
-    connection.close()
-    return {"backend": "backend1", "tarea": t}
+# Editar tarea
+@app.put("/api/tareas/{tarea_id}", response_model=TareaConID)
+def editar_tarea(tarea_id: int, tarea: Tarea):
+    conn = get_connection()
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE tareas SET titulo = %s, descripcion = %s WHERE id = %s",
+                (tarea.titulo, tarea.descripcion, tarea_id)
+            )
+            if cursor.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Tarea no encontrada")
+        conn.commit()
+    return {**tarea.dict(), "id": tarea_id}
