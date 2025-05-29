@@ -45,10 +45,11 @@ services:
 
   nginx:
     build:
-      context: ./nginx
+      context: .
+      dockerfile: nginx/Dockerfile
     container_name: nginx
     ports:
-      - "82:80"
+      - "82:443"
     depends_on:
       - backend1
       - backend2
