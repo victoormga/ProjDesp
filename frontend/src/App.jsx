@@ -92,19 +92,57 @@ function App() {
                   value={editTitulo}
                   onChange={(e) => setEditTitulo(e.target.value)}
                 />
-                <input
-                  type="text"
+                <textarea
                   value={editDescripcion}
                   onChange={(e) => setEditDescripcion(e.target.value)}
+                  placeholder="Descripción de la tarea"
+                  rows={3}
+                  style={{
+                    resize: "vertical",
+                    overflowWrap: "break-word",
+                    wordBreak: "break-word",
+                    whiteSpace: "pre-wrap",
+                    maxWidth: "100%",
+                  }}
                 />
                 <button onClick={() => guardarEdicion(t.id)}>💾</button>
                 <button onClick={cancelarEdicion}>❌</button>
               </>
             ) : (
               <>
-                <strong>{t.titulo}</strong> {t.descripcion}
-                <button onClick={() => empezarEdicion(t)}>✏️</button>
-                <button className="delete" onClick={() => eliminarTarea(t.id)}>🗑️</button>
+                <div
+                  style={{
+                    maxWidth: "600px",
+                    width: "100%",
+                    margin: "0 auto",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: "1rem",
+                  }}
+                >
+                  <div style={{ flexGrow: 1 }}>
+                    <strong style={{ display: "block", marginBottom: "0.5rem", color: "gold" }}>
+                      {t.titulo}
+                    </strong>
+                    <p
+                      style={{
+                        wordBreak: "break-word",
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "break-word",
+                        overflowY: "auto",
+                        maxHeight: "150px",
+                        margin: 0,
+                      }}
+                    >
+                      {t.descripcion}
+                    </p>
+                  </div>
+                  <div>
+                    <button onClick={() => empezarEdicion(t)}>✏️</button>
+                    <button className="delete" onClick={() => eliminarTarea(t.id)}>🗑️</button>
+                  </div>
+                </div>
               </>
             )}
           </li>
