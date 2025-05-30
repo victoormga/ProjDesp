@@ -1,11 +1,13 @@
+# Importación de librerías necesarias
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pymysql
 from typing import List
 
+# Crear instancia de la aplicación FastAPI
 app = FastAPI()
 
-# Configuración de la conexión a MySQL
+# Función para obtener una conexión a la base de datos MySQL
 def get_connection():
     return pymysql.connect(
         host="mysql",
@@ -15,7 +17,7 @@ def get_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-# Crear tabla si no existe
+# Inicializar la base de datos y crear la tabla si no existe
 def init_db():
     conn = get_connection()
     with conn:
@@ -29,17 +31,19 @@ def init_db():
             """)
         conn.commit()
 
+# Ejecutar la función al iniciar para asegurarse de que la tabla exista
 init_db()
 
-# Modelo Pydantic para una tarea
+# Modelo Pydantic para validar y estructurar los datos de una tarea
 class Tarea(BaseModel):
     titulo: str
     descripcion: str
 
+# Modelo que incluye el ID de la tarea
 class TareaConID(Tarea):
     id: int
 
-# Obtener todas las tareas
+# Ruta para obtener todas las tareas
 @app.get("/api/tareas/", response_model=List[TareaConID])
 def obtener_tareas():
     conn = get_connection()
@@ -49,7 +53,7 @@ def obtener_tareas():
             tareas = cursor.fetchall()
     return tareas
 
-# Crear nueva tarea
+# Ruta para crear una nueva tarea
 @app.post("/api/tareas/", response_model=TareaConID)
 def crear_tarea(tarea: Tarea):
     conn = get_connection()
@@ -63,7 +67,7 @@ def crear_tarea(tarea: Tarea):
         conn.commit()
     return {**tarea.dict(), "id": tarea_id}
 
-# Obtener tarea por ID
+# Ruta para obtener una tarea por ID
 @app.get("/api/tareas/{tarea_id}", response_model=TareaConID)
 def obtener_tarea(tarea_id: int):
     conn = get_connection()
@@ -75,7 +79,7 @@ def obtener_tarea(tarea_id: int):
                 raise HTTPException(status_code=404, detail="Tarea no encontrada")
     return tarea
 
-# Eliminar tarea
+# Ruta para eliminar una tarea por ID
 @app.delete("/api/tareas/{tarea_id}")
 def eliminar_tarea(tarea_id: int):
     conn = get_connection()
@@ -85,7 +89,7 @@ def eliminar_tarea(tarea_id: int):
         conn.commit()
     return {"mensaje": "Tarea eliminada"}
 
-# Editar tarea
+# Ruta para editar una tarea existente
 @app.put("/api/tareas/{tarea_id}", response_model=TareaConID)
 def editar_tarea(tarea_id: int, tarea: Tarea):
     conn = get_connection()
