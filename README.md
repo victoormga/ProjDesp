@@ -58,8 +58,8 @@ Este proyecto es una aplicación web de gestión de tareas desarrollada con **Re
 1. **Clona el repositorio:**
 
    ```bash
-   git clone <repo_url>
-   cd <carpeta_proyecto>
+   git clone https://github.com/victoormga/ProjDesp.git
+   cd ProjDesp
    ````
 
 2. **Construye los contenedores:**
