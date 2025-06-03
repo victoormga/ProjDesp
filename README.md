@@ -19,7 +19,6 @@ Este proyecto es una aplicación web de gestión de tareas desarrollada con **Re
     * Eliminar tarea
 
 * Estilo centrado y responsive
-* Descripción con salto de línea automático (multilínea)
 
 ### Backend (FastAPI)
 
@@ -27,6 +26,7 @@ Este proyecto es una aplicación web de gestión de tareas desarrollada con **Re
 
   * `GET /api/tareas/`: listar tareas
   * `POST /api/tareas/`: crear tarea
+  * `GET /api/tareas/{id}`: ver tarea
   * `PUT /api/tareas/{id}`: editar tarea
   * `DELETE /api/tareas/{id}`: eliminar tarea
   
@@ -60,32 +60,25 @@ Este proyecto es una aplicación web de gestión de tareas desarrollada con **Re
    ```bash
    git clone <repo_url>
    cd <carpeta_proyecto>
-   ```
+   ````
 
-2. **Genera los certificados SSL:**
-
-   ```bash
-   mkdir -p certs
-   openssl req -x509 -newkey rsa:4096 -nodes -keyout certs/selfsigned.key -out certs/selfsigned.crt -days 365
-   ```
-
-3. **Construye los contenedores:**
+2. **Construye los contenedores:**
 
    ```bash
    docker compose build
    ```
 
-4. **Inicia los servicios:**
+3. **Inicia los servicios:**
 
    ```bash
    docker compose up
    ```
 
-5. **Accede a la app:**
+4. **Accede a la app:**
    Abre tu navegador en:
 
    ```
-   https://localhost
+   https://localhost:82
    ```
 
    (Acepta el certificado no confiable si es autofirmado)
@@ -94,7 +87,7 @@ Este proyecto es una aplicación web de gestión de tareas desarrollada con **Re
 
 ## Notas adicionales
 
-* Los cambios del frontend deben compilarse con `vite build` y copiarse en `nginx/dist`.
+* Los cambios del frontend deben compilarse con `npm run build` y copiarse en `nginx/dist`.
 * La configuración de `default.conf` se encuentra en `nginx/default.conf`
 * Puedes modificar el método de balanceo activando `least_conn` o `ip_hash` en la sección `upstream`.
 

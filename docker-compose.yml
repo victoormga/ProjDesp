@@ -1,19 +1,21 @@
 services:
+  # Primer backend con FastAPI
   backend1:
     build:
-      context: ./backend1
+      context: ./backend1        # Ruta al Dockerfile de backend1
     container_name: backend1
     expose:
-      - "5001"
+      - "5001"                   # Expone el puerto interno (no lo publica al host)
     environment:
-      - MYSQL_HOST=mysql
+      - MYSQL_HOST=mysql         # Datos de conexión a MySQL
       - MYSQL_DATABASE=tareasdb
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
     depends_on:
-    - mysql
-    restart: on-failure
+      - mysql                    # Espera a que MySQL esté listo antes de iniciar
+    restart: on-failure          # Reinicia si falla
 
+  # Segundo backend con FastAPI (idéntico pero en otro contenedor)
   backend2:
     build:
       context: ./backend2
@@ -26,9 +28,10 @@ services:
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
     depends_on:
-    - mysql
+      - mysql
     restart: on-failure
 
+  # Base de datos MySQL
   mysql:
     image: mysql:8.0
     container_name: mysql
@@ -39,20 +42,22 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:
-      - "3308:3308"
+      - "3308:3308"              # Este puerto no es estándar, se puede cambiar si no se usa
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql  # Persistencia de datos en volumen
 
+  # Servidor NGINX con balanceo y HTTPS
   nginx:
     build:
       context: .
       dockerfile: nginx/Dockerfile
     container_name: nginx
     ports:
-      - "82:443"
+      - "82:443"                 # Expone HTTPS en el puerto 82 del host 
     depends_on:
       - backend1
       - backend2
 
+# Volumen para almacenar los datos de MySQL
 volumes:
   mysql_data:
