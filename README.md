@@ -13,11 +13,11 @@ Este proyecto es una aplicación web de gestión de tareas desarrollada con **Re
 
   * Título
   * Descripción
-* Listado de tareas existentes
-* Botones para:
+  * Listado de tareas existentes
+  * Botones para:
+    * Editar tarea
+    * Eliminar tarea
 
-  * Editar tarea
-  * Eliminar tarea
 * Estilo centrado y responsive
 * Descripción con salto de línea automático (multilínea)
 
@@ -29,6 +29,7 @@ Este proyecto es una aplicación web de gestión de tareas desarrollada con **Re
   * `POST /api/tareas/`: crear tarea
   * `PUT /api/tareas/{id}`: editar tarea
   * `DELETE /api/tareas/{id}`: eliminar tarea
+  
 * Validación de campos obligatorios
 
 ### NGINX
